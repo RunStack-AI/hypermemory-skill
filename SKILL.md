@@ -1,245 +1,181 @@
 ---
-name: hypermemory
-version: 0.5.2
+name: hypermemory-software-development
+version: 0.6.5
+description: >-
+  Mandatory every-turn HyperMemory protocol for AI coding tools and agents,
+  including Claude Code, Codex, Cursor, and other MCP-capable development
+  environments. Use in every session and project, including every user turn,
+  to recall and store durable context, write a chronological timeline entry,
+  and submit complete, accurately classified token telemetry. Preserve
+  technical context, implementation decisions, codebase facts, debugging
+  history, and deployment constraints.
 enforcement: mandatory
 trigger: every_turn
 ---
 
-> **For humans reading this file:** This is the canonical integration file for AI coding assistants (Claude, Cursor, Windsurf, Cline, etc.) that use HyperMemory as persistent memory across sessions. The directive language below is intentionally absolute because it's how LLMs reliably follow protocol. For programmatic TypeScript/JavaScript access, see the [SDK Integration](#sdk-integration) section below or the [monorepo README](https://github.com/RunStack-AI/hypermemory-sdk#readme).
+# HyperMemory Software Development Skill
 
----
+Use this skill when helping with software engineering, code review, debugging,
+architecture, deployment, or technical planning.
 
-# HYPERMEMORY — MANDATORY ON EVERY SINGLE MESSAGE
+## Start Of Work
 
-YOU MUST EXECUTE THIS PROTOCOL ON EVERY MESSAGE. NO EXCEPTIONS.
+1. Call `hm_get_overview`.
+2. Call `hm_recall` for the repository, feature, bug, service, and tool names.
+3. Use `hm_get_nodes(keys=[...])` for exact keys when you need full,
+   untruncated records, structured data, assets, duplicates, or relationships.
+4. Use recalled and hydrated constraints before proposing or changing anything.
 
-You have persistent memory across all conversations via the `hm` CLI.
-Use the Shell tool to run `hm` commands. The CLI is already installed.
+## What To Remember
 
----
+Store durable engineering context:
 
-## SDK INTEGRATION
+- Architecture decisions and the reason they were made.
+- Production constraints, deployment topology, service ownership, and rollback or recovery requirements.
+- Bugs, root causes, fixes, test evidence, and commands that verified the result.
+- User preferences about coding style, release process, branching, commits, and documentation.
+- Important file paths, APIs, schemas, queue names, model names, environment variables, and external services.
 
-For programmatic access via TypeScript/JavaScript, use the `@runstack-ai/hypermemory-core` package:
+Update existing nodes when facts change. Do not create duplicates for the same
+component, bug, project, or decision.
 
-```typescript
-import { HyperMemoryClient } from "@runstack-ai/hypermemory-core";
+Use only canonical ontology classes for `node_type`. Common classes include
+`user person organization component event decision concept artifact project
+technology preference fact skill`. Do not invent new `node_type` values or
+ontology classes. If uncertain, omit `node_type` or choose the closest
+canonical class; HyperMemory resolves invalid or missing input internally
+before persistence.
 
-const hm = new HyperMemoryClient({ apiKey: "hm_your_api_key" });
+## Relationship Guidance
 
-// Store
-await hm.store({ key: "tech_react", description: "React UI library", node_type: "technology" });
-
-// Recall
-const results = await hm.recall({ query: "frontend frameworks" });
-
-// Update
-await hm.update({ key: "tech_react", description: "React 19 — concurrent rendering" });
-
-// Forget
-await hm.forget("tech_old_framework");
-
-// Overview
-const overview = await hm.overview();
-
-// Ingest
-await hm.ingest({ text: "Jane joined Acme Corp as CTO...", context: "career update" });
-
-// Timeline
-await hm.timelineWrite({ summary: "Deployed v2.0 to production" });
-const events = await hm.timelineRead({ period: "7d" });
-```
-
-### Visualization
-
-```typescript
-import { CosmographViewer, ForceGraph3DViewer } from "@runstack-ai/hypermemory-visualizer-core";
-
-// 2D GPU-accelerated graph
-const viewer2D = new CosmographViewer(element, { showHyperedges: false });
-const graph = await hm.getPublicGraph("graph:abc123");
-await viewer2D.setData(graph.nodes, graph.links);
-
-// 3D Three.js graph
-const viewer3D = new ForceGraph3DViewer(element);
-await viewer3D.setData(graph.nodes, graph.links);
-```
-
-Full SDK docs: https://github.com/RunStack-AI/hypermemory-sdk#readme
-
----
-
-## FIRST MESSAGE — RECALL MEMORY
-
-BEFORE you write a single word, run these via Shell tool:
-
-```bash
-hm overview
-hm recall "keywords from user message"
-```
-
-If memory returns information about the user, project, or topic — USE IT.
-Do not ask what you already know. Do not re-explore code you have context for.
-
-## EVERY MESSAGE — STORE NEW INFORMATION
-
-After reading the user's message, store meaningful new information. The server
-automatically enriches nodes with structured data, relationships, and hyperedges —
-you just need to provide the key, description, and type.
-
-**Before storing, check if the info already exists:**
-```bash
-hm recall "topic keywords"
-```
-If a node exists for this topic, UPDATE it instead of creating a duplicate.
-
-**Store a new fact, preference, decision, or entity:**
-```bash
-hm store KEY "substantive description of what to remember" --type TYPE
-```
-
-**Update existing info (preferred over creating duplicates):**
-```bash
-hm update KEY --desc "corrected or expanded info"
-```
-
-**Delete wrong info:**
-```bash
-hm forget KEY
-```
-
-THEN write your response.
-
-### What to store (software development context):
-
-- Architecture decisions and rationale
-- Tech stack choices, versions, constraints
-- File structure patterns and conventions
-- Bug fixes and their root causes
-- User preferences (coding style, frameworks, naming)
-- Project status, milestones, deployments
-- API contracts, schemas, endpoints
-- Environment configs, server details
-- People and their roles on the project
-- Skills and expertise areas
-
-### What NOT to store:
-- Trivial acknowledgements ("ok", "thanks", "sounds good")
-- Information already in memory (update instead)
-- Conversation mechanics
-
----
-
-## RULES
-
-NEVER:
-- Skip memory operations on any message
-- Respond before calling `hm overview` + `hm recall` on the first message
-- Ask "should I save this?" — just save it
-- Announce "I've stored that" — do it silently
-- Create a node without `--type`
-- Create a duplicate when you should update
-
-ALWAYS:
-- `hm overview` + `hm recall` BEFORE your first response
-- `hm recall` before `hm store` to check for existing nodes
-- Set `--type` on every store
-- Use recalled memory naturally — never say "according to my memory"
-- Maintain the `user_profile` node with user's name, role, preferences
-
----
-
-## NODE TYPES (--type)
-
-```
-user person organization component event decision concept artifact
-project technology preference fact skill research
-```
-
-## RELATIONSHIPS (--rel)
-
-Describe how nodes connect in plain language. Be specific about WHY.
-
-BAD:  "depends_on"
-BAD:  "uses"
-GOOD: "The search pipeline depends on Qdrant because it provides
-       vector similarity matching for the hybrid search system"
-GOOD: "Ken chose SvelteKit for the frontend because it supports
-       SSR and progressive enhancement out of the box"
-GOOD: "The Japan GTM strategy was motivated by low AI penetration
-       in the enterprise segment combined with high institutional trust"
-
-The server automatically summarizes long labels for readability.
-Include `--data '{"priority":"high"}'` for structured metadata when useful.
-
-## KEY FORMAT
-
-`{type}_{name}` — e.g. `decision_jwt_auth`, `person_alice`, `tech_redis`, `pref_dark_mode`
-
-Special: `user_profile` — singleton node for the primary user.
-
-## HYPEREDGES — GROUP 3+ NODES
-
-When 3+ nodes participate in a single indivisible relationship, store them
-as a hyperedge. Use `--rel` with `participant_keys` in the MCP tool, or
-describe the grouping when storing and the server will create it.
-
-**The removal test:** If removing any single participant still leaves the
-relationship fully intact, use binary edges instead. Hyperedges capture
-joint necessity that no chain of pairwise edges can express.
+Always connect technical memories to the relevant project, service, component,
+or decision.
 
 Examples:
 
-```bash
-# Team composition — removing any member changes the team
-hm store project_alpha "Alpha project — frontend rewrite" --type project \
-  --rel '{"participant_keys":["person_alice","person_bob","person_carol","project_alpha"],"relationship":"core_team","description":"These three jointly constitute the decision-making unit for Alpha"}'
-
-# Tech stack — these components are co-dependent
-hm store tech_stack_api "Production API stack" --type concept \
-  --rel '{"participant_keys":["tech_fastapi","tech_redis","tech_postgres"],"relationship":"api_stack","description":"FastAPI serves requests, Redis caches sessions, Postgres stores data — all three are required"}'
-
-# Decision context — the decision only makes sense given all participants
-hm store decision_migrate_db "Decided to migrate from MySQL to Postgres" --type decision \
-  --rel '{"participant_keys":["decision_migrate_db","tech_mysql","tech_postgres","fact_scaling_limit"],"relationship":"migration_decision","description":"The scaling limit motivated the migration from MySQL to Postgres"}'
+```json
+{"to_key": "component_mcp_server", "relationship": "signup provisioning fix depends on Supabase OTP verification before account lifecycle creation"}
 ```
 
-Do NOT overuse hyperedges. Most relationships are binary (A -> B). Only use
-hyperedges when removing any participant would fundamentally change the meaning.
+Use `hm_find_related` before touching complex systems so related constraints are
+visible.
 
-## FILE STORAGE (Pro, Business, Enterprise, RunStack plans)
+## Timeline Reporting
 
-When the user wants to store a file in HyperMemory, use `hm_upload_file` (MCP tool) or the dashboard UI. The file is uploaded to S3 and a graph node is created with an AI-generated summary.
+This protocol is mandatory on every turn in every session and project. Call
+`hm_timeline_write` exactly once on every turn before the final response. This
+is required even when the turn is short, conversational, diagnostic, blocked,
+or produces no file changes.
 
-- Supported: pdf, doc/x, ppt/x, xls/x, csv, txt, md, rdf, jpg, png, gif, webp, mp3, wav, ogg, mp4, webm, mov
-- Limits: Pro 1GB, Business 100GB, Enterprise 1TB, RunStack 10GB
-- Use `hm_list_files` to query stored files
-- Only upload when user explicitly asks
+Write a concise chronological summary that records:
 
-## TIMELINE DIARY (optional)
+- What the user requested, decided, corrected, or clarified.
+- What the agent actually did during the turn.
+- The material result, decision, blocker, or next state.
+- The session ID, project or workspace, and relevant memory node keys in
+  `meta` when known.
 
-The **timeline** auto-records meaningful activity; it is not default graph context.
-Use for lookback or an explicit line the graph did not capture:
+Timeline reporting is separate from graph memory and token reporting.
+`hm_store`, `hm_update`, `hm_ingest`, and `hm_tokens` do not replace
+`hm_timeline_write`. Do not limit timeline entries to notable debugging
+milestones or deployments. Use additional timeline entries only for distinct
+major milestones within a long-running turn; the required end-of-turn entry
+must still summarize the complete turn.
 
-```bash
-hm timeline-write "Plain-language line (e.g. major topic not stored as a node)"
-hm timeline   # --query, --period, --node-key, --start, --end as needed
+## Token Reporting
+
+This protocol is mandatory on every turn in every session and project. During
+end-of-turn finalization, call `hm_tokens` exactly once with the same session ID
+and a monotonically increasing turn sequence. Never treat token reporting as a
+compliance checkbox or submit only the minimum fields accepted by the server.
+
+Submit the fullest truthful telemetry available:
+
+- `input_tokens`, `output_tokens`, and `total_tokens`.
+- `reasoning_tokens` and `cache_tokens` when exposed by the AI tool, or when a
+  defensible estimate is possible.
+- Exact client counts with `measurement_quality: client_exact` when available.
+- Otherwise, carefully reasoned `self_estimated` values, an uncertainty
+  percentage appropriate to the tool (normally 40 for consumer chat clients),
+  and an honest estimation bias.
+- `cost_usd` only when its provenance is legitimate; never invent cost.
+
+Omit a field only when it is unavailable and cannot be defensibly estimated.
+Never label an estimate as exact or provider-verified.
+
+Every report must use one or more weighted activity categories totaling exactly
+100:
+`reasoning`, `memory`, `context`, `doc_processing`, `automation`,
+`personal`, `chatting`, `research`, `design`, `calculations`, `coding`,
+`planning`, `productivity`, `writing`, or `unmatched`.
+
+Each category may appear at most once in a report. If multiple activities map
+to the same category, combine them into one segment and add their weights; do
+not submit duplicate category entries.
+
+Classify the work performed on the turn, not the conversational wording of the
+request:
+
+1. For software-development agents and software work, use `coding` as the
+   default substantive activity. This includes implementation, debugging,
+   testing, code review, repository inspection, architecture work tied to a
+   codebase, deployment work, and technical configuration.
+2. Use `planning` only when the AI tool is explicitly operating in a planning
+   mode or the requested deliverable is a plan rather than implementation.
+3. Ballpark `memory` and `context` as overhead based on the actual turn. Do not
+   let either replace the substantive activity.
+4. Normally assign zero to `design`, `productivity`, `chatting`,
+   `calculations`, `doc_processing`, `research`, `writing`, `personal`, and
+   `automation`. Include one only when that activity was genuinely performed
+   as a material part of the turn.
+5. Before submission, verify that the activity weights total exactly 100 and
+   that the largest share represents the turn's real work.
+
+Typical software implementation report:
+
+```json
+[
+  {"category": "coding", "weight": 80},
+  {"category": "context", "weight": 15},
+  {"category": "memory", "weight": 5}
+]
 ```
 
-## FULL COMMAND REFERENCE
+Typical planning-only report:
 
-| Command | When |
-|---------|------|
-| `hm overview` | First message |
-| `hm recall "query"` | First message + before storing |
-| `hm store KEY "desc" --type TYPE` | New information |
-| `hm update KEY --desc "new"` | Correcting / expanding info |
-| `hm forget KEY` | Removing info |
-| `hm find KEY` | Graph traversal from a node |
-| `hm ingest "text" --context "label"` | Complex multi-entity text |
-| `hm timeline-write "..."` | Optional: explicit diary line |
-| `hm timeline` | Optional: past timeline events |
+```json
+[
+  {"category": "planning", "weight": 75},
+  {"category": "context", "weight": 20},
+  {"category": "memory", "weight": 5}
+]
+```
 
----
+Do not use a fixed `memory: 10` and `context: 90` split for software work; that
+destroys activity attribution. Do not use the removed `mem_ingest` or
+`mem_retrieve` categories.
 
-THIS IS NOT OPTIONAL. EXECUTE ON EVERY MESSAGE. NO EXCEPTIONS.
+When reporting `cost_usd`, also set `cost_quality`: `provider_actual` only for a
+provider-billed amount, `price_calculated` for exact tokens multiplied by known
+model pricing, or `self_estimated` for an approximate amount. Use `unavailable`
+when no cost is supplied. Token measurement quality and cost quality are separate.
+
+For OpenRouter responses, submit client-visible token fields and weighted
+segments. HyperMemory treats them as provisional attribution and reconciles
+them with management analytics for the OpenRouter key mapped to the user. Never
+invent provider-actual values. Claude Desktop uses `self_estimated`, includes
+uncertainty, and does not report API-equivalent dollar cost.
+
+Use `hm_recall` to discover candidate nodes. Use `hm_get_nodes` only for exact
+known keys that need inspection/debugging or full fidelity context.
+
+## Do Not Store
+
+- Full secrets, API keys, passwords, or private tokens.
+- Large code blobs that should stay in git.
+- Unverified guesses; store root causes only after evidence supports them.
+
+## Skill Updates
+
+When asked to install or update HyperMemory behavior, call `hm_skill` with
+`variant="software-development"`.

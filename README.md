@@ -15,12 +15,14 @@ Once installed, your AI assistant will automatically remember architecture decis
 Add this to your Cursor settings under **Skills** → **Add Skill**:
 
 ```
-https://github.com/RunStack-AI/hypermemory-skill.git
+https://github.com/hypermemory-ai/hypermemory-skill.git
 ```
 
 ### Other IDEs
 
 Point your assistant's skill/rules system at the `SKILL.md` file in this repo. If your IDE supports git-based skills, use the `.git` URL above.
+
+Current release: **v0.6.5**
 
 ## Prerequisites
 
@@ -41,5 +43,5 @@ All of this happens silently in the background — no prompting required.
 ## Links
 
 - [HyperMemory](https://hypermemory.io) — Dashboard & account
-- [SDK](https://github.com/RunStack-AI/hypermemory-sdk) — TypeScript/JavaScript programmatic access
+- [SDK](https://github.com/hypermemory-ai/hypermemory-sdk) — TypeScript/JavaScript programmatic access
 - [Docs](https://docs.hypermemory.io) — Full documentation
